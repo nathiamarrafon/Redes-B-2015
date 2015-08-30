@@ -45,7 +45,7 @@ void reafFile(char path[]) {
 	}
 
 	while ((charFile = fgetc(file)) != EOF) {
-		char auxStruct[12];
+		char auxStruct[16];
 
 		for (int indice = 1; indice < strlen(strAux); indice++) {
 			strAux[indice - 1] = strAux[indice];
@@ -59,6 +59,7 @@ void reafFile(char path[]) {
 			noRead = 100;
 		}
 		else if (!strcmp(strAux, "Fim")) {
+			fclose(file);
 			break;
 		}
 
@@ -69,7 +70,7 @@ void reafFile(char path[]) {
 		else if (charFile == '=' && noRead == 1) {
 			noRead++;
 		}
-		else if (noRead > 1 && noRead < 11 && charFile != ',') {
+		else if (noRead > 1 && noRead < 17 && charFile != ',') {
 			if (charFile != ' ') {
 				auxStruct[noRead - 2] = charFile;
 				noRead++;
@@ -77,21 +78,21 @@ void reafFile(char path[]) {
 		}
 		else if (charFile == ',' && noRead < 100) {
 			auxStruct[noRead - 2] = '\0';
-			noRead = 11;
+			noRead = 20;
 			strcpy(nos[i].ip, auxStruct);
 			strcpy(auxStruct, "");
 		}
-		else if (charFile == '=' && noRead == 11) {
+		else if (charFile == '=' && noRead == 20) {
 			noRead++;
 		}
-		else if (noRead > 11 && noRead < 100 && charFile != ';') {
+		else if (noRead > 20 && noRead < 100 && charFile != ';') {
 			if (charFile != ' ') {
-				auxStruct[noRead - 12] = charFile;
+				auxStruct[noRead - 21] = charFile;
 				noRead++;
 			}
 		}
 		else if (charFile == ';' && noRead < 100) {
-			auxStruct[noRead - 12] = '\0';
+			auxStruct[noRead - 21] = '\0';
 			noRead = 1;
 			nos[i].port = atoi(auxStruct);
 			i++;
