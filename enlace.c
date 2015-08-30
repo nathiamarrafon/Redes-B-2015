@@ -140,3 +140,7 @@ void printEnlace() {
 		}
 	}
 }
+
+int checkMTU(char package[], int mtu){
+	(strlen(package) > mtu) ? return -1 : return 0;
+}
