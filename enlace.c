@@ -15,7 +15,6 @@ void printEnlace();
 
 int main(int argc, char *argv[]) {
 
-
 	reafFile("topologia1.cnf");
 	printEnlace();
 
@@ -50,15 +49,15 @@ void reafFile(char path[]) {
 		for (int indice = 1; indice < strlen(strAux); indice++) {
 			strAux[indice - 1] = strAux[indice];
 		}
-		strAux[strlen(strAux) - 1] = charFile;
+		(charFile > 96 && charFile < 123) ?	strAux[strlen(strAux) - 1] = charFile : strAux[strlen(strAux) - 1] = charFile+32;
 
-		if (!strcmp(strAux, "Nos")) {
+		if (!strcmp(strAux, "nos")) {
 			noRead = 1;
 		}
-		else if (!strcmp(strAux, "Enl")) {
+		else if (!strcmp(strAux, "enl")) {
 			noRead = 100;
 		}
-		else if (!strcmp(strAux, "Fim")) {
+		else if (!strcmp(strAux, "fim")) {
 			fclose(file);
 			break;
 		}
