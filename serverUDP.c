@@ -94,22 +94,21 @@ int save_msg(int x){
 	}
 	
 	if (recebe.controle == 1){
-		
 		if (sendto(s, salvas, sizeof(salvas), 0, (struct sockaddr *)&client, sizeof(client)) < 0){
 			perror("sendto()");
 			exit(2);
 		}
 		
 		recebe.controle == 0;
-		} else if(num_msg >=5){
-			printf("\nO Limite de mensagens gravadas é 5\nnao eh possivel gravar mais mensagens \n");
-		} else {
-			strcpy(salvas[aux].usuario , recebe.usuario);
-			strcpy(salvas[aux].msg , recebe.msg);
-			
-			aux++;
-				num_msg++;
-			
-			printf("Cadastro Efetuado com Sucesso\n");
-		}   	      
+	} else if(num_msg >=5){
+		printf("\nO Limite de mensagens gravadas é 5\nnao eh possivel gravar mais mensagens \n");
+	} else {
+		strcpy(salvas[aux].usuario , recebe.usuario);
+		strcpy(salvas[aux].msg , recebe.msg);
+		
+		aux++;
+			num_msg++;
+		
+		printf("Cadastro Efetuado com Sucesso\n");
+	}   	      
 }
