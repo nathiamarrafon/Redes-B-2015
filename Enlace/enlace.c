@@ -3,16 +3,15 @@
 
 typedef struct {
 	int id;
-	char ip[12];
+	char ip[17];
 	int port;
 	int neighbors[6];
 }node;
 
 
 node nodus[6];
-struct sockaddr_in physicalSend, physicalReceive;
-pthread_t tSend;
-pthread_t tReceive;
+struct sockaddr_in physicalSend, physicalReceive, teste;
+
 
 
 void readFile(char []);
@@ -22,7 +21,7 @@ void createChecksum(char []);
 int  checkChecksum(char []);
 int  initDataLink(int , char []);
 
-void *sendPhy(void *arg);
+void *sendPhy();
 void *receivePhy(void *arg);
 
 
@@ -55,7 +54,7 @@ void readFile(char path[]) {
 
 /* ===== Verifica o comando ====================================== */
 	while ((charFile = fgetc(file)) != EOF) {
-		char auxStruct[16];
+		char auxStruct[17];
 
 		for (indexA = 1; indexA< strlen(strAux); indexA++) {
 			strAux[indexA - 1] = strAux[indexA];
@@ -80,7 +79,7 @@ void readFile(char path[]) {
 		else if (charFile == '=' && noRead == 1) {
 			noRead++;
 		}
-		else if (noRead > 1 && noRead < 17 && charFile != ',') {
+		else if (noRead > 1 && noRead < 18 && charFile != ',') {
 			if (charFile != ' ') {
 				auxStruct[noRead - 2] = charFile;
 				noRead++;
@@ -212,11 +211,9 @@ int checkChecksum(char package[]) {
   *
   * param arg: Nó destino
 ***/
-void *sendPhy(void *arg){
+void *sendPhy(){
 	char package[100];
-	int mtu, nodeDest, error, sock;
-	char no_dest[2];
-	int nodeSrc=(int)arg;
+	int mtu, error, sock;
 
 	while(1){
 		error = 0;
@@ -233,12 +230,15 @@ void *sendPhy(void *arg){
 		}
 		memcpy(package, DataLink_Physical, 100);
 
-		no_dest[0]=package[0];
-		no_dest[1]='\0';
-		nodeDest=atoi(no_dest);
-
-        mtu = nodus[nodeSrc-1].neighbors[nodeDest-1];
-		if(mtu <= 0){
+		// CATHERINE
+		nodeDst=package[0]-48;
+		
+        mtu = nodus[nodeSrc-1].neighbors[nodeDst-1];
+        if (nodus[nodeSrc-1].id == 0) {
+        	error = 202;
+        } else if(mtu == -1){
+			error = -303;
+		} else if (mtu == 0){
 			error = -404;
 		}
     
@@ -254,10 +254,15 @@ void *sendPhy(void *arg){
 				exit(1);
 			}
 
-			
 			physicalSend.sin_family      = AF_INET;										
-			physicalSend.sin_port        = htons(nodus[nodeDest-1].port);	  
-			physicalSend.sin_addr.s_addr = inet_addr(nodus[nodeDest-1].ip);			
+			physicalSend.sin_port        = htons(nodus[nodeDst-1].port);	  
+			physicalSend.sin_addr.s_addr = inet_addr(nodus[nodeDst-1].ip);
+
+			if(set_garbler(0,0,0) < 0){
+				printf("set_garbler()");
+				break;
+				//return -1;
+			}
 
 			if((sendto_garbled(sock, package, 100, 0, (struct sockaddr *)&physicalSend, sizeof(physicalSend))) < 0){
 				if (error >=0 ){
@@ -292,35 +297,19 @@ void *sendPhy(void *arg){
 ***/
 int initDataLink(int nodeSrc, char path[] ){
 
-	int sock;
+	
 	readFile(path);
-	set_garbler(0,1,0);
-	// if(set_garbler(0,0,0) < 0){
-	// 	printf("set_garbler()");
-	// 	return -1;
-	// }
 
-	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-		perror("socket()");
-		exit(1);
-	}
 
-	physicalReceive.sin_family      = AF_INET;										
-	physicalReceive.sin_port        = htons(nodus[nodeSrc].port);	
-	physicalReceive.sin_addr.s_addr = INADDR_ANY; // inet_addr(nodus[nodeSrc].ip);	
-	if (bind(sock, (struct sockaddr *)&physicalReceive, sizeof(physicalReceive)) < 0){
-		perror("bind()");
-		exit(1);
-	}
 
-	if(pthread_create(&tSend, NULL, sendPhy, (void *)nodeSrc)){
+	if(pthread_create(&tSend, NULL, sendPhy, NULL)){
 		printf("Erro ao criar a thread para enviar\n");
-		return (-1);
+		return -1;
 	}
 
-	if(pthread_create(&tReceive, NULL, receivePhy, (void *)sock)){
+	if(pthread_create(&tReceive, NULL, receivePhy, NULL)){
 		printf("Erro ao criar a thread para receber\n");
-		return (-1);
+		return -1;
 	}
 
 	if(pthread_join(tSend, NULL)!=0){
@@ -339,11 +328,23 @@ int initDataLink(int nodeSrc, char path[] ){
   * param arg: Nó origem
 ***/
 void *receivePhy(void *arg){
-
+	nodeDst=1;
 	char package[100];
-	int address_size;
+	int address_size, sock, bla;
 
-	int nodeSrc= (int )arg;
+	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+		perror("socket()");
+		exit(1);
+	}
+
+	physicalReceive.sin_family      = AF_INET;										
+	physicalReceive.sin_port        = htons(nodus[nodeDst-1].port);	
+	physicalReceive.sin_addr.s_addr = INADDR_ANY; // inet_addr(nodus[nodeSrc].ip);	
+
+	if (bind(sock, (struct sockaddr *)&physicalReceive, sizeof(physicalReceive)) < 0){
+		perror("bind()");
+		exit(1);
+	}
 
 	while(1){
 		if((pthread_mutex_lock(&mutex4))!=0){
@@ -352,7 +353,17 @@ void *receivePhy(void *arg){
 			// return (-1);
 		}
 
-		if(recvfrom(nodeSrc, package, 100, 0, (struct sockaddr *)&physicalReceive, &address_size) <0){
+ 		// CATHERINE
+		fflush(stdout); 	
+
+		bla = sizeof(physicalReceive);
+	    if (getsockname(sock, (struct sockaddr *) &physicalReceive, &bla) < 0) {
+	        perror("getsockname()");
+	        exit(1);
+	    }
+
+		address_size = sizeof(teste);
+		if((recvfrom(sock, &package, sizeof(package), 0, (struct sockaddr *)&teste, &address_size)) < 0){
 			perror("recvfrom()");
 			exit(1);
 		}
@@ -368,5 +379,7 @@ void *receivePhy(void *arg){
 		    break;
 		    // return (-1);
 		}
+
 	}
+	close(sock);
 }

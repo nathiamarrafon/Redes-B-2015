@@ -22,5 +22,11 @@ pthread_mutex_t mutex2;
 pthread_mutex_t mutex3;
 pthread_mutex_t mutex4;
 
+pthread_t tSend;
+pthread_t tReceive;
+
 char DataLink_Physical[100];
+int nodeSrc;
+int nodeDst;
+
 int errorDataLink;

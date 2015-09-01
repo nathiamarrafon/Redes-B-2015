@@ -3,11 +3,6 @@
 pthread_t tDataLink;
 pthread_t tPhysical;
 
-/*
-*	Variaveis globais
-*/
-pthread_mutex_t mutex[5];
-
 char path[100];
 
 void *dataLink(void *nodeSrc){
@@ -45,13 +40,16 @@ int main(int argc, char* argv[]){
 		printf("Erro ao inicializar mutex 4\n");
 		return -1;
 	}
+
     pthread_mutex_lock(&mutex1);
     pthread_mutex_lock(&mutex3);
 
-	pthread_create(&tPhysical, NULL, physical, (void *)1);
-    usleep(500);
 	
-	pthread_create(&tDataLink, NULL, dataLink, (void *)]);
+	pthread_create(&tPhysical, NULL, physical, (void *)1);
+	usleep(1000);
+	nodeSrc = atoi(argv[1]);
+	pthread_create(&tDataLink, NULL, dataLink, (void *)argv[1]);
+	
 
     pthread_join(tDataLink, NULL);
     pthread_join(tPhysical, NULL);
