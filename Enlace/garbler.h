@@ -15,7 +15,7 @@ Return value:
 -4: Sum of L,C,D cannot exceed 100
 */
 
-ssize_t sendto_garbled(int s, const void *msg, size_t len,int flags,const struct sockaddr *to,int tolen);
+ssize_t sendto_garbled(int s, const void *msg, size_t len, int flags, const struct sockaddr *to, int tolen);
 /*
 The parameters are the same as those in standard sendto() function
 */

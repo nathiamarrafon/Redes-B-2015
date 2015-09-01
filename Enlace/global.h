@@ -4,9 +4,6 @@
 #include <sys/socket.h>
 #include <crypt.h>
 #include <pthread.h>
-
-
-
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -19,5 +16,11 @@
 
 #include "garbler.h"
 
-pthread_mutex_t mutex[5];
+pthread_mutex_t mutex0; 
+pthread_mutex_t mutex1; 
+pthread_mutex_t mutex2; 
+pthread_mutex_t mutex3;
+pthread_mutex_t mutex4;
+
 char DataLink_Physical[100];
+int errorDataLink;

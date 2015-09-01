@@ -11,32 +11,27 @@ typedef struct {
 
 node nodus[6];
 struct sockaddr_in physicalSend, physicalReceive;
+pthread_t tSend;
+pthread_t tReceive;
 
 
-void reafFile(char path[]);
+void readFile(char []);
 void printDataLink();
-int  checkMTU(char package[], int mtu);
-void createChecksum(char package[]);
-int  checkChecksum(char package[]);
+int  checkMTU(char [], int );
+void createChecksum(char []);
+int  checkChecksum(char []);
+int  initDataLink(int , char []);
 
 void *sendPhy(void *arg);
 void *receivePhy(void *arg);
 
-int main(int argc, char *argv[]) {
-	char dados[100];
-	strcpy(dados, "Paolla");
 
-
-
-	reafFile(argv[1]);
-	printDataLink();
-	createChecksum(dados);
-	printf("%d\n", checkChecksum(dados));
-	receivePhy(&argv);
-}
-
-
-void reafFile(char path[]) {
+/**
+  * Função para ler o arquivo,exibir na tela os nós e seus vizinhos
+  *
+  * param path: caminho do arquivo
+***/
+void readFile(char path[]) {
 	FILE *file;
 	char charFile;
 	char strAux[4] = "ooo";
@@ -58,7 +53,7 @@ void reafFile(char path[]) {
 		}
 	}
 
-/* ===== VERIFY COMMAND ========================================== */
+/* ===== Verifica o comando ====================================== */
 	while ((charFile = fgetc(file)) != EOF) {
 		char auxStruct[16];
 
@@ -67,7 +62,7 @@ void reafFile(char path[]) {
 		}
 		(charFile > 96 && charFile < 123) ?	(strAux[strlen(strAux) - 1] = charFile) : (strAux[strlen(strAux) - 1] = charFile+32);
 
-		if (!strcmp(strAux, "nodus")) {
+		if (!strcmp(strAux, "nos")) {
 			noRead = 1;
 		}
 		else if (!strcmp(strAux, "enl")) {
@@ -78,7 +73,7 @@ void reafFile(char path[]) {
 			break;
 		}
 
-/* ===== READ nodus ================================================ */
+/* ===== Lê os nós =============================================== */
 		if (charFile >= 48 && charFile <= 57 && noRead == 1) {
 			nodus[i].id = charFile - 48;
 		}
@@ -113,7 +108,7 @@ void reafFile(char path[]) {
 			i++;
 		}
 
-/* ===== READ ENLACES ============================================ */
+/* ===== Lê os enlaces =========================================== */
 		else if (charFile >= 48 && charFile <= 57 && noRead == 100) {
 			i = charFile - 48;
 		}
@@ -141,8 +136,13 @@ void reafFile(char path[]) {
 			noRead = 100;
 		}
 	}
+	// printDataLink();
 }
 
+
+/**
+  * Função para exibir na tela os nós e seus vizinhos
+***/
 void printDataLink() {
 	int indexA, indexB;
 	
@@ -159,11 +159,24 @@ void printDataLink() {
 	}
 }
 
+
+/**
+  * Função para verificar o MTU
+  *
+  * param package: Pacote
+  * param mtu: MTU máximo que pode ser recebido/enviado
+***/
 int checkMTU(char package[], int mtu) {
 	return (strlen(package) > mtu) ? -1 : 0;
 }
 
-
+/**
+  * Função para adicionar a detecção de erros no final do pacote.
+  * Foi utilizado a função crypto <crypt.h> para criar uma chave única
+  * para cada pacote, essa chave é concatenada ao final do pacote
+  *
+  * param package: Pacote
+***/
 void createChecksum(char package[]) {
 	char checksum[14];
 
@@ -172,7 +185,13 @@ void createChecksum(char package[]) {
 	strcat(package, checksum);
 }
 
-
+/**
+  * Função para verificar a detecção de erros no final do pacote.
+  * A chave presente no final do pacote é retirada e verifica-se 
+  * se é a mesma que foi adicionada anteriomente
+  *
+  * param package: Pacote
+***/
 int checkChecksum(char package[]) {
 	char checksum1[4], checksum2[14];
 	int indexA, sizePackge = strlen(package);
@@ -185,109 +204,155 @@ int checkChecksum(char package[]) {
 	strcpy(checksum2, crypt(package, "keycrypt"));
 	checksum2[3] = '\0';
 
-	return (strcmp(checksum1, checksum2)==0) ? 0: -1;
+	return (strcmp(checksum1, checksum2)==0) ? 0 : -1;
 }
 
-/*
+/**
+  * Função para enviar para camada Física. 
+  *
+  * param arg: Nó destino
+***/
 void *sendPhy(void *arg){
-	char dados[100];
-	int mtu, no_destino, erro, random, soc;
+	char package[100];
+	int mtu, nodeDest, error, sock;
 	char no_dest[2];
-	int l_no_emulado=(int)arg;
+	int nodeSrc=(int)arg;
 
 	while(1){
-
-		erro=0;
-
-	
-		if(pthread_mutex_lock(&mutex[2])!=0){
-			printf("Erro travar");
-			return (-1);
+		error = 0;
+		if(pthread_mutex_lock(&mutex2)!=0){
+			printf("Erro ao travar o mutex 2");
+			break;
+			//return (-1);
 		}
 	
-
-		if(pthread_mutex_lock(&mutex[1])!=0){
-			printf("Erro travar");
-			return (-1);
+		if(pthread_mutex_lock(&mutex1)!=0){
+			printf("Erro ao travar o mutex 1");
+			break;
+			//return (-1);
 		}
-		memcpy(dados, rede_enlace, 100);
+		memcpy(package, DataLink_Physical, 100);
 
-	
-
-		no_dest[0]=dados[0];
+		no_dest[0]=package[0];
 		no_dest[1]='\0';
-		no_destino=atoi(no_dest);
+		nodeDest=atoi(no_dest);
 
-		
-
-        mtu = enlaces[l_no_emulado][no_destino];
-		if(mtu==-1){
-			erro=-10;
+        mtu = nodus[nodeSrc-1].neighbors[nodeDest-1];
+		if(mtu <= 0){
+			error = -404;
 		}
     
-   
+		createChecksum(package);
 
-		checksum_criar(dados);
-
-		
-
-		if(verificaMTU(dados, mtu)==-1 && erro == 0){
-			erro=-20;
+		if(checkMTU(package, mtu)==-1 && error == 0){
+			error = -505;
 		}
-
 		
-
-		if(erro>=0){
-			if ((soc = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+		if(error >= 0){
+			if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
 				perror("socket()");
 				exit(1);
 			}
 
-			/* Define o endereço IP e a porta do destino */
-			/* fisica_env.sin_family      = AF_INET;										/* Tipo do endereço         */
-			/* fisica_env.sin_port        = htons(atoi(nos[no_destino].porta));	/* Porta do servidor        */
-			/*fisica_env.sin_addr.s_addr = inet_addr(nos[no_destino].ip);			/* Endereço IP do servidor  */
+			
+			physicalSend.sin_family      = AF_INET;										
+			physicalSend.sin_port        = htons(nodus[nodeDest-1].port);	  
+			physicalSend.sin_addr.s_addr = inet_addr(nodus[nodeDest-1].ip);			
 
-			/*if(sendto_garbled(soc, dados, 100,0, (struct sockaddr *)&fisica_env,sizeof(fisica_env))<0){
-				erro = -30;
+			if((sendto_garbled(sock, package, 100, 0, (struct sockaddr *)&physicalSend, sizeof(physicalSend))) < 0){
+				if (error >=0 ){
+					error = -606;
+				}
 			}
-			close(soc);
+			close(sock);
 		}
 
-        if(pthread_mutex_unlock(&mutex[0])!=0){
-			printf("Erro destravar");
-			return (-1);
+        if(pthread_mutex_unlock(&mutex0)!=0){
+			printf("Erro ao destravar o mutex 0");
+			break;
+			//return (-1);
 		}
 		
+		errorDataLink=error;
 
-
-
-		erro_enlace_rede=erro;
-
-		if(pthread_mutex_unlock(&mutex[2])!=0){
-			printf("Erro destravar");
-			return (-1);
+		if(pthread_mutex_unlock(&mutex2)!=0){
+			printf("Erro ao destravar o mutex 2");
+			break;
+			//return (-1);
 		}
 	}
-}*/
+}
 
 
+/**
+  * Função para inicializar a camada Enlace. 
+  *
+  * param nodeSrc: Nó destino
+  * param path: Caminho do arquivo
+***/
+int initDataLink(int nodeSrc, char path[] ){
 
+	int sock;
+	readFile(path);
+	set_garbler(0,1,0);
+	// if(set_garbler(0,0,0) < 0){
+	// 	printf("set_garbler()");
+	// 	return -1;
+	// }
+
+	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+		perror("socket()");
+		exit(1);
+	}
+
+	physicalReceive.sin_family      = AF_INET;										
+	physicalReceive.sin_port        = htons(nodus[nodeSrc].port);	
+	physicalReceive.sin_addr.s_addr = INADDR_ANY; // inet_addr(nodus[nodeSrc].ip);	
+	if (bind(sock, (struct sockaddr *)&physicalReceive, sizeof(physicalReceive)) < 0){
+		perror("bind()");
+		exit(1);
+	}
+
+	if(pthread_create(&tSend, NULL, sendPhy, (void *)nodeSrc)){
+		printf("Erro ao criar a thread para enviar\n");
+		return (-1);
+	}
+
+	if(pthread_create(&tReceive, NULL, receivePhy, (void *)sock)){
+		printf("Erro ao criar a thread para receber\n");
+		return (-1);
+	}
+
+	if(pthread_join(tSend, NULL)!=0){
+		printf("Erro Thread Join\n");
+	}
+
+	if(pthread_join(tReceive, NULL)!=0){
+		printf("Erro Thread Join\n");
+	}
+}
+
+
+/**
+  * Função para recever da camada Física. 
+  *
+  * param arg: Nó origem
+***/
 void *receivePhy(void *arg){
 
 	char package[100];
 	int address_size;
 
-	int l_soc= (int )arg;
-	printf("%d \n",l_soc );
+	int nodeSrc= (int )arg;
+
 	while(1){
-		if((pthread_mutex_lock(&mutex[4]))!=0){
+		if((pthread_mutex_lock(&mutex4))!=0){
 			printf("Erro ao travar o mutex 4");
 			break;
 			// return (-1);
 		}
 
-		if(recvfrom(l_soc, package, 100, 0, (struct sockaddr *)&physicalReceive, &address_size) <0){
+		if(recvfrom(nodeSrc, package, 100, 0, (struct sockaddr *)&physicalReceive, &address_size) <0){
 			perror("recvfrom()");
 			exit(1);
 		}
@@ -298,7 +363,7 @@ void *receivePhy(void *arg){
 			memcpy(DataLink_Physical, package, 100);
 		}
 
-    	if(pthread_mutex_unlock(&mutex[3])!=0){
+    	if(pthread_mutex_unlock(&mutex3)!=0){
 		    printf("Erro ao destravar o mutex 3");
 		    break;
 		    // return (-1);
