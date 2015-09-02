@@ -43,7 +43,7 @@ void *sendPhyDL(void* threadid){
     }
 }
 
-void* receivePhyDL(void* threadid){
+void *receivePhyDL(void *threadid){
     while(1){
         pthread_mutex_lock(&mutex3); 
 
