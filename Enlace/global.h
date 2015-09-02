@@ -1,3 +1,10 @@
+/**
+  * 10109031 Francesco Abrahão
+  * 11742244 Marcello da Silva Sousa 
+  * 11742251 Náthia de Souza Marrafon
+  * 11078359 Paolla Catherine S. M. Agard
+***/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
