@@ -12,13 +12,14 @@ Considerando que a rede local é bastante confiável, não se espera a ocorrênc
 
 Para usar o adulterador, deve-se trocar todas as instâncias de chamadas à primitiva sendto, da API sockets, por sendto_garbled. Ambas funções têm exatamente os mesmos argumentos.
 
-A biblioteca Enlace possui métodos de leitura de arquivo do tipo .cnf, impressão na tela dos nós e enlaces lidos no arquivo, verificar MTU e checksum, criar checksum, inicializar camada de enlace, enviar mensagem para camada física e receber mensagem da camada física.
+A biblioteca Enlace possui métodos de leitura de arquivo do tipo .cnf, exibição dos nós e seus enlaces lidos no arquivo, verificar MTU e checksum, criar checksum, inicializar camada de enlace, enviar mensagem para camada física e receber mensagem da camada física.
 
 #### void readFile(char []);
+Lê um arquivo do tipo .cnf como o exemplo abaixo, para isso, a função recebe o caminho do arquivo (char []), procura a palavra 'nos' e armazena o id, ip e porta na struct nodus do tipo node, em seguida, procura a palavra 'enl', lê os enlaces e com seus repectivos MTUs e armazena também na variável nodus no campo neighbors exemplo: 1 -> 2, MTU = 2000; no nó de id 1 no campo neighbors indexado por 2-1 já que os índices começam por 0 o valor 2000, que representa o MTU será armazenado, isso será feito até a palavra 'fim' ser encontrada. 
 ```text
 // topologia1.cnf
 
-Nós
+Nos
    1: IP = 10.0.0.2, Porta = 5000;
    2: IP = 10.0.0.2, Porta = 5001;
    3: IP = 10.0.0.3, Porta = 5000;
@@ -31,11 +32,34 @@ Enlaces
    3 -> 4, MTU = 2000;
 Fim 
 ```
+
 #### void printDataLink();
+Exibe na tela os nós com seus respectivos enlaces, usando o arquivo acima como exemplo será exibido na tala o seguinte:
+```text
+1: IP = 10.0.0.2, Porta = 5000
+     1 -> 2, MTU = 2000
+
+2: IP = 10.0.0.2, Porta = 5001
+     2 -> 3, MTU = 5000
+     2 -> 4, MTU = 2000
+
+3: IP = 10.0.0.3, Porta = 5000
+     3 -> 4, MTU = 2000
+
+4: IP = 10.0.0.4, Porta = 5000
+
+```
+Observação: O método printDataLink atualmente não está sendo utilizado.
 
 #### int  checkMTU(char [], int );
+Verifica se o MTU é maior ou igual ao tamanho do pacote que está sendo enviado, se o tamanho do pacote for menor retornará falso(-1), caso contrário retornará verdadeiro(0).
+
 #### void createChecksum(char []);
+Cria o checksum, um código usado para verificar a integridade de dados transmitidos através de um canal com ruídos, que será adicionado no final do pacote para verificações futuras, para isso é utilizado o método crypt da biblioteca crypt.h que gera uma chave a partir da combinação do pacote de dados a ser enviado e a palavra 'keycrypt', a chave gerada possui 14 caracteres mas apenas 3 são adicionados ao fim do pacote.
+
 #### int  checkChecksum(char []);
+Verifica se o checksum, um código usado para verificar a integridade de dados transmitidos através de um canal com ruídos, que está no fina do pacote de dados que foi recebido é o mesmo que foi adicionado, para isso, os últimos 3 caracteres que foram adiiconados no final do pacote são retiradas e armazenados em uma variável, um novo checksum é gerado utilizando o método crypt da biblioteca crypt.h que gera novamente a chave a partir da combinação do pacote de dados a ser enviado e a palavra 'keycrypt', verifica-se se a chave gerada é a mesma que foi retirada anteriomenten do final do pacote, se as chaves forem iguais retornará verdadeiro(0), caso contrário retornará falso(-1).
+
 #### int  initDataLink(int , char []);
 #### void *sendPhy();
 #### void *receivePhy(void *arg);
