@@ -61,31 +61,12 @@ Cria o checksum, um código usado para verificar a integridade de dados transmit
 Verifica se o checksum, um código usado para verificar a integridade de dados transmitidos através de um canal com ruídos, que está no final do pacote de dados que foi recebido é o mesmo que foi adicionado, para isso, o método recebe o pacote (char [])  os últimos 3 caracteres que foram adiiconados no final do pacote são retiradas e armazenados em uma variável, um novo checksum é gerado utilizando o método crypt da biblioteca crypt.h que gera novamente a chave a partir da combinação do pacote de dados a ser enviado e a palavra 'keycrypt', verifica-se se a chave gerada é a mesma que foi retirada anteriomenten do final do pacote, se as chaves forem iguais retornará verdadeiro(0), caso contrário retornará falso(-1).
 
 #### int  initDataLink(int , char [])
-Inicializa a camada de enlace, para isso, o método recebe como parâmetro o nó destino (int) e o caminho do arquivo (char []), o método readFile recebe o caminho do arquivo, [readFile](#void-readfilechar-)
+Inicializa a camada de enlace, para isso, o método recebe como parâmetro o nó destino (int) e o caminho do arquivo (char []), para o método [readFile](#void-readfilechar-) é passado o caminho do arquivo, em seguida, as thread sendPhy (enviar) e receivePhy (receber) pthread_create, para que essas funções sejam executadas simultâneamente, após a execuçãos ambas terão suas atividades suspensas.
 
-Obsercação: Nó destino (int) parâmetro não tilizado, será corrigo ou utilizado na sequência do projeto.
-	readFile(path);
+Obsercação: Nó destino (int) parâmetro não tilizado, será retirado ou utilizado na sequência do projeto.
 
-
-
-	if(pthread_create(&tSend, NULL, sendPhy, NULL)){
-		printf("Erro ao criar a thread para enviar\n");
-		return -1;
-	}
-
-	if(pthread_create(&tReceive, NULL, receivePhy, NULL)){
-		printf("Erro ao criar a thread para receber\n");
-		return -1;
-	}
-
-	if(pthread_join(tSend, NULL)!=0){
-		printf("Erro Thread Join\n");
-	}
-
-	if(pthread_join(tReceive, NULL)!=0){
-		printf("Erro Thread Join\n");
-	}
+#### void *sendPhy()
 
 
-#### void *sendPhy();
-#### void *receivePhy(void *arg);
+
+#### void *receivePhy(void *arg)
