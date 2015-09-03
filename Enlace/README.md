@@ -1,14 +1,13 @@
 Camada de Enlace
 ================
 
-## **THIS COOKBOOK IS DEPRECATED**
+## enlace.c
 
-### teste
-- :create: creates a new virtualenv
-- :delete: deletes an existing virtualenv
-
-
-#### Actions
-- :create: creates a new virtualenv
-- :delete: deletes an existing virtualenv
-
+### void readFile(char []);
+### void printDataLink();
+### int  checkMTU(char [], int );
+### void createChecksum(char []);
+### int  checkChecksum(char []);
+### int  initDataLink(int , char []);
+### void *sendPhy();
+### void *receivePhy(void *arg);
