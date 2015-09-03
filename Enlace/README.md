@@ -15,7 +15,6 @@ Para usar o adulterador, deve-se trocar todas as instâncias de chamadas à prim
 A biblioteca Enlace possui métodos de leitura de arquivo do tipo .cnf, impressão na tela dos nós e enlaces lidos no arquivo, verificar MTU e checksum, criar checksum, inicializar camada de enlace, enviar mensagem para camada física e receber mensagem da camada física.
 
 #### void readFile(char []);
-#### void printDataLink();
 ```text
 // topologia1.cnf
 
@@ -32,7 +31,7 @@ Enlaces
    3 -> 4, MTU = 2000;
 Fim 
 ```
-
+#### void printDataLink();
 
 #### int  checkMTU(char [], int );
 #### void createChecksum(char []);
@@ -40,26 +39,3 @@ Fim
 #### int  initDataLink(int , char []);
 #### void *sendPhy();
 #### void *receivePhy(void *arg);
-
-
-Cada nó da rede virtual será emulado por uma instância de execução do programa desenvolvido e endereçado por um par (<endereço da máquina>,<porta UDP>). Uma mesma estação poderá, portanto, executar vários nós virtuais.
-
-	
-
-Figura 1	
-
-Um arquivo com uma Configuração Inicial (CI) especificará os nós da rede virtual e as ligações entre eles. Por exemplo, a topologia ilustrada pela figura 1, seria descrita por um arquivo com o seguinte conteúdo:
-
-O arquivo com a CI compreende duas seções. Na seção Nós são identificados os nós e os endereços IP e porta UDP associados a cada um. Na seção enlaces são feitas as ligações entre os nós e os o MTU (Maximum Transfer Unit) de cada enlace.
-
-O arquivo de configuração poderá incluir um número arbitrário de espaços entre tokens sucessivos além de linhas em branco, não sendo feita distinção entre caracteres maiúsculos e minúsculos.
-
-Ao executar o programa que implementa a pilha de protocolos, serão passados dois argumentos na linha de comando, o nome de um arquivo de configuração inicial e o identificador do nó a emular.
-
-A CI define a topologia inicial da rede. Esta topologia pode mudar dinamicamente em virtude de:
-
-1.     Falha de um nó, decorrentes do cancelamento do processo que o emula;
-2.     Falha de um enlace, decorrente da remoção lógica do enlace, conforme será discutido na seção 6.
-Ambas falhas podem ser permanentes ou temporárias. Ou seja, um nó ou enlace que foram removidos podem ser reiniciados. Entretanto, não haverá a introdução dinâmica de nós ou enlaces que não estejam presentes na topologia inicial.
-
-Assuma que a rede poderá ter até 6 nós, e que cada um poderá estar ligado a até outros 3.
